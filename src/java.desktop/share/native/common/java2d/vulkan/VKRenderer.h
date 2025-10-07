@@ -154,4 +154,6 @@ void VKRenderer_SetRadialGradientPaint(jboolean linear, jint cycleMethod, jint n
 VKRenderingContext* VKRenderer_GetContext();
 VKTexturePool* VKRenderer_GetTexturePool(VKRenderer* );
 
+void VKRenderer_ReleaseSharedSemaphore(VKRenderer* renderer, uint32_t id);
+
 #endif //VKRenderer_h_Included
