@@ -9,7 +9,7 @@
 
 struct GradientStops {
     float fractions[GRADIENT_MAX_FRACTIONS];
-    vec4 colors[GRADIENT_MAX_FRACTIONS];
+    uint colors[GRADIENT_MAX_FRACTIONS];
 };
 
 vec4 interpolateMultiGradient(float t, GradientStops stops) {
@@ -35,11 +35,9 @@ vec4 interpolateMultiGradient(float t, GradientStops stops) {
     t = (t - stops.fractions[n]) / (stops.fractions[n + 1] - stops.fractions[n]);
 
     // STEP 4: interpolate
-    vec4 color = mix(stops.colors[n], stops.colors[n + 1], t);
-
-    // STEP 5: convert to sRGB if necessary
+    vec4 color = mix(decodeColor(stops.colors[n]), decodeColor(stops.colors[n + 1]), t);
     if (GRADIENT_SHADER_VARIANT_GET_IS_LINEAR(const_ShaderVariant)) {
-        color.rgb = fromLinear3(color.rgb);
+        vec4 color = vec4(fromLinear3(color.rgb), color.a);
     }
 
     return color;
