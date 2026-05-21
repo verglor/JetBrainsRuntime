@@ -28,6 +28,7 @@ package sun.java2d.d3d;
 import java.awt.Composite;
 import sun.font.GlyphList;
 import sun.java2d.SunGraphics2D;
+import sun.java2d.SurfaceData;
 import sun.java2d.loops.GraphicsPrimitive;
 import sun.java2d.pipe.BufferedTextPipe;
 import sun.java2d.pipe.RenderQueue;
