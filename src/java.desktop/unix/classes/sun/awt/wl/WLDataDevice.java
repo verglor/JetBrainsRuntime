@@ -101,10 +101,12 @@ public class WLDataDevice {
     }
 
     public void setSelection(int protocol, int selectionType, WLDataSource source, long serial) {
+        log.fine("setSelection(), protocol = " + protocol + ", selectionType = " + selectionType + ", source = " + source + ", serial = " + serial);
         setSelectionImpl(nativePtr, protocol, selectionType, (source == null) ? 0 : source.getNativePtr(), serial);
     }
 
     public void startDrag(WLDataSource source, long originSurfaceNativePtr, long serial) {
+        log.fine("startDrag(), source = " + source + ", originSurfaceNativePtr = 0x" + Long.toHexString(originSurfaceNativePtr) + ", serial = " + serial);
         startDragImpl(nativePtr, source.getNativePtr(), originSurfaceNativePtr, serial);
     }
 
