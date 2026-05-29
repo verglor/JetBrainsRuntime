@@ -80,11 +80,15 @@ public class WLDataOffer {
     }
 
     public synchronized void unref() {
-        log.fine("unref(), this = " + getID() + ", old refcount = " + refcount);
+        if (log.isLoggable(PlatformLogger.Level.FINE)) {
+            log.fine("unref(), this = " + getID() + ", old refcount = " + refcount);
+        }
         if (nativePtr != 0 && refcount > 0) {
             --refcount;
             if (refcount == 0) {
-                log.fine("destroyImpl(" + getID() + ")");
+                if (log.isLoggable(PlatformLogger.Level.FINE)) {
+                    log.fine("destroyImpl(" + getID() + ")");
+                }
                 destroyImpl(nativePtr);
                 nativePtr = 0;
             }
@@ -92,13 +96,17 @@ public class WLDataOffer {
     }
 
     public synchronized WLDataOffer ref() {
-        log.fine("ref(), this = " + getID() + ", old refcount = " + refcount);
+        if (log.isLoggable(PlatformLogger.Level.FINE)) {
+            log.fine("ref(), this = " + getID() + ", old refcount = " + refcount);
+        }
         ++refcount;
         return this;
     }
 
     public synchronized byte[] receiveData(String mime) throws IOException  {
-        log.fine("receiveData(), this = " + getID() + ", mime = " + mime);
+        if (log.isLoggable(PlatformLogger.Level.FINE)) {
+            log.fine("receiveData(), this = " + getID() + ", mime = " + mime);
+        }
         int fd;
 
         if (nativePtr == 0) {
@@ -115,7 +123,9 @@ public class WLDataOffer {
     }
 
     public synchronized void accept(long serial, String mime) {
-        log.fine("accept(), this = " + getID() + ", serial = " + serial + ", mime = " + mime);
+        if (log.isLoggable(PlatformLogger.Level.FINE)) {
+            log.fine("accept(), this = " + getID() + ", serial = " + serial + ", mime = " + mime);
+        }
 
         if (nativePtr == 0) {
             throw new IllegalStateException("nativePtr is 0");
@@ -125,7 +135,9 @@ public class WLDataOffer {
     }
 
     public synchronized void finishDnD() {
-        log.fine("finishDnD(), this = " + getID());
+        if (log.isLoggable(PlatformLogger.Level.FINE)) {
+            log.fine("finishDnD(), this = " + getID());
+        }
 
         if (nativePtr == 0) {
             throw new IllegalStateException("nativePtr is 0");
@@ -137,7 +149,9 @@ public class WLDataOffer {
     }
 
     public synchronized void setDnDActions(int actions, int preferredAction) {
-        log.fine("setDnDActions(), this = " + getID() + ", actions = " + actions + ", preferredAction = " + preferredAction);
+        if (log.isLoggable(PlatformLogger.Level.FINE)) {
+            log.fine("setDnDActions(), this = " + getID() + ", actions = " + actions + ", preferredAction = " + preferredAction);
+        }
 
         if (nativePtr == 0) {
             throw new IllegalStateException("nativePtr is 0");
@@ -170,12 +184,16 @@ public class WLDataOffer {
 
     // Event handlers, called from native code on the data device dispatch thread
     private synchronized void handleOfferMime(String mime) {
-        log.fine("handleOfferMime(), this = " + getID() + ", mime = '" + mime + "'");
+        if (log.isLoggable(PlatformLogger.Level.FINE)) {
+            log.fine("handleOfferMime(), this = " + getID() + ", mime = '" + mime + "'");
+        }
         mimes.add(mime);
     }
 
     private synchronized void handleSourceActions(int actions) {
-        log.fine("handleSourceActions(), this = " + getID() + ", actions = " + actions);
+        if (log.isLoggable(PlatformLogger.Level.FINE)) {
+            log.fine("handleSourceActions(), this = " + getID() + ", actions = " + actions);
+        }
         sourceActions = actions;
         if (this.listener != null) {
             this.listener.availableActionsChanged(actions);
@@ -183,7 +201,9 @@ public class WLDataOffer {
     }
 
     private synchronized void handleAction(int action) {
-        log.fine("handleAction(), this = " + getID() + ", action = " + action);
+        if (log.isLoggable(PlatformLogger.Level.FINE)) {
+            log.fine("handleAction(), this = " + getID() + ", action = " + action);
+        }
         selectedAction = action;
         if (this.listener != null) {
             this.listener.selectedActionChanged(action);

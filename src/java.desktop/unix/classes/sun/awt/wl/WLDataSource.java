@@ -182,7 +182,9 @@ public class WLDataSource {
     }
 
     public synchronized void destroy() {
-        log.fine("destroy(), this = " + getID());
+        if (log.isLoggable(PlatformLogger.Level.FINE)) {
+            log.fine("destroy(), this = " + getID());
+        }
         if (nativePtr != 0) {
             destroyImpl(nativePtr);
             nativePtr = 0;
@@ -192,28 +194,40 @@ public class WLDataSource {
     // Event handlers, called from native code on the data transferer dispatch thread
 
     protected void handleSend(String mime, int fd) {
-        log.fine("handleSend(), this = " + getID() + ", mime = " + mime + ", fd = " + fd);
+        if (log.isLoggable(PlatformLogger.Level.FINE)) {
+            log.fine("handleSend(), this = " + getID() + ", mime = " + mime + ", fd = " + fd);
+        }
         WLDataDevice.transferContentsWithType(data, mime, fd);
     }
 
     protected void handleCancelled() {
-        log.fine("handleCancelled(), this = " + getID());
+        if (log.isLoggable(PlatformLogger.Level.FINE)) {
+            log.fine("handleCancelled(), this = " + getID());
+        }
         destroy();
     }
 
     protected void handleTargetAcceptsMime(String mime) {
-        log.fine("handleTargetAcceptsMime(), this = " + getID());
+        if (log.isLoggable(PlatformLogger.Level.FINE)) {
+            log.fine("handleTargetAcceptsMime(), this = " + getID());
+        }
     }
 
     protected void handleDnDDropPerformed() {
-        log.fine("handleDnDDropPerformed(), this = " + getID());
+        if (log.isLoggable(PlatformLogger.Level.FINE)) {
+            log.fine("handleDnDDropPerformed(), this = " + getID());
+        }
     }
 
     protected void handleDnDFinished() {
-        log.fine("handleDnDFinished(), this = " + getID());
+        if (log.isLoggable(PlatformLogger.Level.FINE)) {
+            log.fine("handleDnDFinished(), this = " + getID());
+        }
     }
 
     protected void handleDnDAction(int action) {
-        log.fine("handleDnDAction(), this = " + getID() + ", action = " + action);
+        if (log.isLoggable(PlatformLogger.Level.FINE)) {
+            log.fine("handleDnDAction(), this = " + getID() + ", action = " + action);
+        }
     }
 }

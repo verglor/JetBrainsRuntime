@@ -45,7 +45,9 @@ public class WLDragSourceContextPeer extends SunDragSourceContextPeer {
     }
 
     public WLDragSourceContextPeer createDragSourceContextPeer(DragGestureEvent dge) {
-        log.fine("createDragSourceContextPeer(), dge = " + dge);
+        if (log.isLoggable(PlatformLogger.Level.FINE)) {
+            log.fine("createDragSourceContextPeer(), dge = " + dge);
+        }
         setTrigger(dge);
         return this;
     }
@@ -109,7 +111,9 @@ public class WLDragSourceContextPeer extends SunDragSourceContextPeer {
 
         @Override
         protected synchronized void handleCancelled() {
-            log.fine("handleCancelled(), this = " + getID());
+            if (log.isLoggable(PlatformLogger.Level.FINE)) {
+                log.fine("handleCancelled(), this = " + getID());
+            }
             sendFinishedEvent();
             destroy();
         }
@@ -137,7 +141,9 @@ public class WLDragSourceContextPeer extends SunDragSourceContextPeer {
 
     @Override
     protected void startDrag(Transferable trans, long[] formats, Map<Long, DataFlavor> formatMap) {
-        log.fine("startDrag(), trans = " + trans);
+        if (log.isLoggable(PlatformLogger.Level.FINE)) {
+            log.fine("startDrag(), trans = " + trans);
+        }
 
         var mainSurface = getSurface();
         if (mainSurface == null) {
