@@ -849,7 +849,7 @@ final class WLInputMethodZwpTextInputV3 extends InputMethodAdapter {
                 if (textIterToReset != null) textIterToReset.first();
             }
 
-            SunToolkit.postEvent(SunToolkit.targetToAppContext(clientComponent), ime);
+            SunToolkit.postEvent(ime);
             this.awtCurrentClientLatestPostedPreeditString = preeditString;
 
             return true;
