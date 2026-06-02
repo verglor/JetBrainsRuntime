@@ -95,8 +95,6 @@ import javax.swing.JRootPane;
 import com.jetbrains.exported.JBRApi;
 import sun.awt.AWTAccessor;
 import sun.awt.ComponentFactory;
-import sun.awt.AppContext;
-import sun.awt.AWTAccessor;
 import sun.awt.ConstrainableGraphics;
 import sun.awt.EmbeddedFrame;
 import sun.awt.RequestFocusController;
