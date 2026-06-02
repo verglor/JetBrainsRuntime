@@ -29,7 +29,6 @@ package sun.awt.wl;
 import jdk.internal.misc.InnocuousThread;
 import sun.awt.AWTAccessor;
 import sun.awt.AWTAutoShutdown;
-import sun.awt.AppContext;
 import sun.awt.LightweightFrame;
 import sun.awt.PeerEvent;
 import sun.awt.SunToolkit;
@@ -321,7 +320,7 @@ public class WLToolkit extends UNIXToolkit implements Runnable, ToolkitAPI {
                 break;
             } else if (result == READ_RESULT_FINISHED_WITH_EVENTS) {
                 AWTAutoShutdown.notifyToolkitThreadBusy(); // busy processing events
-                SunToolkit.postEvent(AppContext.getAppContext(), new PeerEvent(this, () -> {
+                SunToolkit.postEvent(new PeerEvent(this, () -> {
                     WLToolkit.awtLock();
                     try {
                         dispatchEventsOnEDT();
@@ -1172,7 +1171,7 @@ public class WLToolkit extends UNIXToolkit implements Runnable, ToolkitAPI {
     }
 
     public static void postEvent(AWTEvent event) {
-        SunToolkit.postEvent(AppContext.getAppContext(), event);
+        SunToolkit.postEvent(event);
     }
 
     @Override
