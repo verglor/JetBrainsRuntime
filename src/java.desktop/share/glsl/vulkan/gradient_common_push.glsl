@@ -37,7 +37,7 @@ vec4 interpolateMultiGradient(float t, GradientStops stops) {
     // STEP 4: interpolate
     vec4 color = mix(decodeColor(stops.colors[n]), decodeColor(stops.colors[n + 1]), t);
     if (GRADIENT_SHADER_VARIANT_GET_IS_LINEAR(const_ShaderVariant)) {
-        vec4 color = vec4(fromLinear3(color.rgb), color.a);
+        color = vec4(fromLinear3(color.rgb), color.a);
     }
 
     return color;
