@@ -65,11 +65,13 @@ import sun.awt.Win32GraphicsConfig;
 import sun.awt.Win32GraphicsEnvironment;
 import sun.awt.event.IgnorePaintEvent;
 import sun.awt.image.SunVolatileImage;
+import sun.java2d.BufferedSurfaceDataExt;
 import sun.java2d.InvalidPipeException;
 import sun.java2d.ScreenUpdateManager;
 import sun.java2d.SurfaceData;
 import sun.java2d.d3d.D3DSurfaceData;
 import sun.java2d.opengl.OGLSurfaceData;
+import sun.java2d.vulkan.Win32VKWindowSurfaceData;
 import sun.java2d.pipe.Region;
 import sun.util.logging.PlatformLogger;
 
@@ -177,7 +179,13 @@ public abstract class WComponentPeer extends WObjectPeer
             // Only recreate surfaceData if this setBounds is called
             // for a resize; a simple move should not trigger a recreation
             try {
-                replaceSurfaceData();
+                if (surfaceData instanceof Win32VKWindowSurfaceData vksd) {
+                    // Revalidate & repaint; the swapchain etc. is managed in native code for Vulkan
+                    vksd.revalidate();
+                    handlePaint(0, 0, width, height);
+                } else {
+                    replaceSurfaceData();
+                }
             } catch (InvalidPipeException e) {
                 // REMIND : what do we do if our surface creation failed?
             }
@@ -210,7 +218,12 @@ public abstract class WComponentPeer extends WObjectPeer
                 cont.invalidate();
                 cont.validate();
 
-                if (surfaceData instanceof D3DSurfaceData.D3DWindowSurfaceData ||
+                if (surfaceData instanceof Win32VKWindowSurfaceData vksd) {
+                    // Revalidate & repaint; the swapchain etc. is managed in native code for Vulkan
+                    vksd.revalidate();
+                    Rectangle b = getBounds();
+                    handlePaint(0, 0, b.width, b.height);
+                } else if (surfaceData instanceof D3DSurfaceData.D3DWindowSurfaceData ||
                     surfaceData instanceof OGLSurfaceData)
                 {
                     // When OGL or D3D is enabled, it is necessary to
@@ -372,6 +385,8 @@ public abstract class WComponentPeer extends WObjectPeer
                 }
                 if (surfaceData instanceof D3DSurfaceData.D3DWindowSurfaceData d3DWindowSurfaceData) {
                     d3DWindowSurfaceData.displayContent(0, 0, 0, 0);
+                } else if (surfaceData instanceof BufferedSurfaceDataExt bufferedSurfaceData) {
+                    bufferedSurfaceData.commit();
                 }
                 return;
             case FocusEvent.FOCUS_LOST:
