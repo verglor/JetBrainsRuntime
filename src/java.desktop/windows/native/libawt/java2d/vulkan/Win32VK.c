@@ -11,7 +11,6 @@ ENTRY(__VA_ARGS__, vkGetPhysicalDeviceWin32PresentationSupportKHR); \
 ENTRY(__VA_ARGS__, vkCreateWin32SurfaceKHR); \
 
 PLATFORM_FUNCTION_TABLE(DECL_PFN)
-static HWND hwnd;
 
 static VkBool32 Win32VK_InitFunctions(VKEnv* vk, PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr) {
     VkBool32 missingAPI = JNI_FALSE;
@@ -35,12 +34,11 @@ static VKPlatformData platformData = {
 
 /*
  * Class:     sun_java2d_vulkan_VKEnv
- * Method:    initPlatform
- * Signature: (J)[Lsun/java2d/vulkan/VKDevice;
+ * Method:    initPlatformWin32
+ * Signature: ()J
  */
 JNIEXPORT jlong JNICALL
-Java_sun_java2d_vulkan_VKEnv_initPlatform(JNIEnv* env, jclass vkenv, jlong windowHandle) {
-    hwnd = (HWND)windowHandle;
+Java_sun_java2d_vulkan_VKEnv_initPlatformWin32(JNIEnv* env, jclass vkenv) {
     return ptr_to_jlong(&platformData);
 }
 

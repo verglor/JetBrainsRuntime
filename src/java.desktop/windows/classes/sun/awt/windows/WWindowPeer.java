@@ -70,6 +70,8 @@ import sun.awt.TimedWindowEvent;
 import sun.awt.Win32GraphicsConfig;
 import sun.awt.Win32GraphicsDevice;
 import sun.awt.Win32GraphicsEnvironment;
+import sun.java2d.CommittableSurfaceDataExt;
+import sun.java2d.SurfaceData;
 import sun.java2d.pipe.Region;
 
 import sun.java2d.SunGraphics2D;
@@ -899,6 +901,9 @@ public class WWindowPeer extends WPanelPeer implements WindowPeer,
                 currentPainter.updateWindow(repaint);
             } else if (log.isLoggable(PlatformLogger.Level.FINER)) {
                 log.finer("Translucent window painter is null in updateWindow");
+            }
+            if (surfaceData instanceof CommittableSurfaceDataExt csd) {
+                csd.commit();
             }
         }
     }

@@ -26,11 +26,13 @@
 package sun.java2d.vulkan;
 
 import sun.awt.windows.WComponentPeer;
+import sun.java2d.CommittableSurfaceDataExt;
 import sun.java2d.SurfaceData;
 
 import java.awt.*;
 
-public class Win32VKWindowSurfaceData extends VKSurfaceData {
+public class Win32VKWindowSurfaceData extends VKSurfaceData
+        implements CommittableSurfaceDataExt.VulkanMixin {
 
     private WComponentPeer peer;
 
