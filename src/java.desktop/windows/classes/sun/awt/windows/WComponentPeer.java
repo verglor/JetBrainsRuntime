@@ -65,6 +65,7 @@ import sun.awt.Win32GraphicsConfig;
 import sun.awt.Win32GraphicsEnvironment;
 import sun.awt.event.IgnorePaintEvent;
 import sun.awt.image.SunVolatileImage;
+import sun.java2d.CommittableSurfaceDataExt;
 import sun.java2d.InvalidPipeException;
 import sun.java2d.ScreenUpdateManager;
 import sun.java2d.SurfaceData;
@@ -372,6 +373,9 @@ public abstract class WComponentPeer extends WObjectPeer
                 }
                 if (surfaceData instanceof D3DSurfaceData.D3DWindowSurfaceData d3DWindowSurfaceData) {
                     d3DWindowSurfaceData.displayContent(0, 0, 0, 0);
+                }
+                if (surfaceData instanceof CommittableSurfaceDataExt csd) {
+                    csd.commit();
                 }
                 return;
             case FocusEvent.FOCUS_LOST:

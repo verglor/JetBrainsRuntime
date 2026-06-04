@@ -891,16 +891,18 @@ public class WWindowPeer extends WPanelPeer implements WindowPeer,
     private void updateWindow(boolean repaint) {
         Window w = (Window)target;
         synchronized (getStateLock()) {
-            if (isOpaque || !w.isVisible() ||
+            if (!w.isVisible() ||
                 (w.getWidth() <= 0) || (w.getHeight() <= 0))
             {
                 return;
             }
-            TranslucentWindowPainter currentPainter = painter;
-            if (currentPainter != null) {
-                currentPainter.updateWindow(repaint);
-            } else if (log.isLoggable(PlatformLogger.Level.FINER)) {
-                log.finer("Translucent window painter is null in updateWindow");
+            if (!isOpaque) {
+                TranslucentWindowPainter currentPainter = painter;
+                if (currentPainter != null) {
+                    currentPainter.updateWindow(repaint);
+                } else if (log.isLoggable(PlatformLogger.Level.FINER)) {
+                    log.finer("Translucent window painter is null in updateWindow");
+                }
             }
             if (surfaceData instanceof CommittableSurfaceDataExt csd) {
                 csd.commit();

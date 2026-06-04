@@ -58,10 +58,8 @@ static void Win32VK_InitSurfaceData(VKWinSDOps* surface, void* data) {
 }
 
 static void Win32VK_OnSurfaceResize(VKWinSDOps* surface, VkExtent2D extent) {
-    // TODO: not sure if we need to do anything here
-    J2dRlsTraceLn(J2D_TRACE_WARNING, "Win32VK_OnSurfaceResize() called, but not implemented yet");
-    // JNIEnv* env = JNU_GetEnv(jvm, JNI_VERSION_1_2);
-    // JNU_CallMethodByName(env, NULL, surface->vksdOps.sdOps.sdObject, "bufferAttached", "()V");
+    // No-op on Win32: unlike Wayland, Windows doesn't need explicit
+    // buffer attachment notification after surface resize.
 }
 
 /*
