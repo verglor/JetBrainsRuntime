@@ -73,3 +73,13 @@ JNIEXPORT void JNICALL Java_sun_java2d_vulkan_Win32VKWindowSurfaceData_initOps(
         JNIEnv *env, jobject vksd, jint format) {
 VKSD_CreateSurface(env, vksd, VKSD_WINDOW, format, Win32VK_OnSurfaceResize);
 }
+
+/*
+ * Class:     sun_java2d_vulkan_Win32VKSurfaceData_Win32VKWindowSurfaceData
+ * Method:    assignWindow
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_sun_java2d_vulkan_Win32VKWindowSurfaceData_assignWindow(
+        JNIEnv *env, jobject vksd, jlong hwnd) {
+    VKSD_InitWindowSurface(env, vksd, Win32VK_InitSurfaceData, jlong_to_ptr(hwnd));
+}

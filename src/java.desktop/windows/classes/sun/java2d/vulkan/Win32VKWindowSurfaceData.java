@@ -29,7 +29,7 @@ import sun.awt.windows.WComponentPeer;
 import sun.java2d.CommittableSurfaceDataExt;
 import sun.java2d.SurfaceData;
 
-import java.awt.*;
+import java.awt.Rectangle;
 
 public class Win32VKWindowSurfaceData extends VKSurfaceData
         implements CommittableSurfaceDataExt.VulkanMixin {
@@ -41,6 +41,7 @@ public class Win32VKWindowSurfaceData extends VKSurfaceData
         super(gc.getFormat(), peer.getColorModel().getTransparency(), WINDOW);
         this.peer = peer;
         initOps(gc.getFormat().getValue(getTransparency()));
+        assignWindow(peer.getHWnd());
     }
 
     @Override
@@ -66,4 +67,6 @@ public class Win32VKWindowSurfaceData extends VKSurfaceData
     }
 
     private native void initOps(int format);
+
+    private native void assignWindow(long hwnd);
 }
