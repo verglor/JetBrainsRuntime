@@ -81,3 +81,18 @@ JNIEXPORT void JNICALL Java_sun_java2d_vulkan_Win32VKWindowSurfaceData_assignWin
         JNIEnv *env, jobject vksd, jlong hwnd) {
     VKSD_InitWindowSurface(env, vksd, Win32VK_InitSurfaceData, jlong_to_ptr(hwnd));
 }
+
+/*
+ * Class:     sun_java2d_vulkan_Win32VKWindowSurfaceData
+ * Method:    getClientAreaSize
+ * Signature: (J)[I
+ */
+JNIEXPORT jintArray JNICALL Java_sun_java2d_vulkan_Win32VKWindowSurfaceData_getClientAreaSize(
+        JNIEnv *env, jclass cls, jlong hwnd) {
+    RECT rect;
+    GetClientRect((HWND)jlong_to_ptr(hwnd), &rect);
+    jintArray result = (*env)->NewIntArray(env, 2);
+    jint size[2] = { rect.right, rect.bottom };
+    (*env)->SetIntArrayRegion(env, result, 0, 2, size);
+    return result;
+}
