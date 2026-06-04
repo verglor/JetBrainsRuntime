@@ -38,8 +38,6 @@
 #include "VKEnv.h"
 #include "VKDevice.h"
 
-
-
 static void* pVulkanLib = NULL;
 
 #ifdef _WIN32
@@ -81,6 +79,7 @@ static void vulkanLibClose() {
 
 #else
 
+#include "jvm_md.h"
 #define VULKAN_DLL JNI_LIB_NAME("vulkan")
 #define VULKAN_1_DLL VERSIONED_JNI_LIB_NAME("vulkan", "1")
 
