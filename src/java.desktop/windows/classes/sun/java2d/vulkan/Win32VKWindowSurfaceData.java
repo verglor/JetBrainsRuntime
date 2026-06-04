@@ -41,8 +41,12 @@ public class Win32VKWindowSurfaceData extends VKSurfaceData
               peer.getColorModel().getTransparency(), WINDOW);
         this.peer = peer;
         this.gc = (VKGraphicsConfig) peer.getGraphicsConfiguration();
-        this.width = peer.getBounds().width;
-        this.height = peer.getBounds().height;
+
+        Rectangle bounds = peer.getBounds();
+        double scale = gc.getFractionalScale();
+        this.width = (int) Math.ceil(bounds.width * scale);
+        this.height = (int) Math.ceil(bounds.height * scale);
+
         initOps(getFormat().getValue(getTransparency()));
         assignWindow(peer.getHWnd());
         configure();
