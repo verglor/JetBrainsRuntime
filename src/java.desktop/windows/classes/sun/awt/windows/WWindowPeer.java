@@ -75,6 +75,7 @@ import sun.java2d.SurfaceData;
 import sun.java2d.pipe.Region;
 
 import sun.java2d.SunGraphics2D;
+import sun.java2d.vulkan.Win32VKWindowSurfaceData;
 import sun.util.logging.PlatformLogger;
 
 import static sun.java2d.SunGraphicsEnvironment.toUserSpace;
@@ -987,6 +988,18 @@ public class WWindowPeer extends WPanelPeer implements WindowPeer,
         Graphics g = super.getGraphics();
         if (!(g instanceof SunGraphics2D)) return g;
         SunGraphics2D sg = (SunGraphics2D)g;
+
+        // Decorated Vulkan windows' surface only covers the client area,
+        // so we need to apply a translation to still map Java's (0, 0) to the top-left corner of the titlebar.
+        if (surfaceData instanceof Win32VKWindowSurfaceData && !isTargetUndecorated()) {
+            Insets insets = ((Window) target).getInsets();
+            if (insets.left != 0 || insets.top != 0) {
+                sg.translate(-insets.left, -insets.top);
+            }
+            return sg;
+        }
+
+        // TODO: check if we're really ok not using this for Vulkan (likely yes) :
 
         // [tav] For the scaling graphics we need to compensate the toplevel insets rounding error
         // to place [0, 0] of the client area in its correct device pixel.

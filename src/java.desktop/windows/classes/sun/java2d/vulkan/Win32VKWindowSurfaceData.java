@@ -64,9 +64,8 @@ public class Win32VKWindowSurfaceData extends VKSurfaceData
 
     @Override
     public Rectangle getBounds() {
-        Rectangle bounds = peer.getBounds();
-        bounds.x = bounds.y = 0;
-        return bounds;
+        // TODO: check if this matches other toolkits
+        return new Rectangle(width, height);
     }
 
     @Override
