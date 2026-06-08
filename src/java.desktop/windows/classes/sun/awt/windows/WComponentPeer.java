@@ -71,6 +71,7 @@ import sun.java2d.ScreenUpdateManager;
 import sun.java2d.SurfaceData;
 import sun.java2d.d3d.D3DSurfaceData;
 import sun.java2d.opengl.OGLSurfaceData;
+import sun.java2d.vulkan.Win32VKWindowSurfaceData;
 import sun.java2d.pipe.Region;
 import sun.util.logging.PlatformLogger;
 
@@ -178,7 +179,14 @@ public abstract class WComponentPeer extends WObjectPeer
             // Only recreate surfaceData if this setBounds is called
             // for a resize; a simple move should not trigger a recreation
             try {
-                replaceSurfaceData();
+                if (surfaceData instanceof Win32VKWindowSurfaceData vksd) {
+                    // The Vulkan surface is persistent across resizes: revalidate
+                    // it in place so the swapchain is recreated to the new size,
+                    // instead of building a brand-new surface.
+                    vksd.revalidate();
+                } else {
+                    replaceSurfaceData();
+                }
             } catch (InvalidPipeException e) {
                 // REMIND : what do we do if our surface creation failed?
             }
@@ -211,7 +219,16 @@ public abstract class WComponentPeer extends WObjectPeer
                 cont.invalidate();
                 cont.validate();
 
-                if (surfaceData instanceof D3DSurfaceData.D3DWindowSurfaceData ||
+                if (surfaceData instanceof Win32VKWindowSurfaceData vksd) {
+                    // The Vulkan surface is persistent: revalidate it in place
+                    // on each dynamic layout request so the swapchain tracks the
+                    // window bounds during live resizing.
+                    try {
+                        vksd.revalidate();
+                    } catch (InvalidPipeException e) {
+                        // REMIND: what do we do if revalidation fails?
+                    }
+                } else if (surfaceData instanceof D3DSurfaceData.D3DWindowSurfaceData ||
                     surfaceData instanceof OGLSurfaceData)
                 {
                     // When OGL or D3D is enabled, it is necessary to

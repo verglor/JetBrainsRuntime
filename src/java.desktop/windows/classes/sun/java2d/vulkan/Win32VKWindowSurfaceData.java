@@ -52,6 +52,22 @@ public class Win32VKWindowSurfaceData extends VKSurfaceData
         configure();
     }
 
+    /**
+     * Re-reads the current client area size of the window and pushes it down to
+     * the native surface via {@link #configure()}. This keeps the surface
+     * persistent across resizes (mirroring the Wayland implementation): the
+     * shared native code revalidates the existing swapchain to the new size
+     * instead of building a brand-new surface on every resize.
+     */
+    public void revalidate() {
+        long hwnd = peer.getHWnd();
+        int[] clientSize = getClientAreaSize(hwnd);
+        this.width = clientSize[0];
+        this.height = clientSize[1];
+        revalidate((VKGraphicsConfig) peer.getGraphicsConfiguration());
+        configure();
+    }
+
     @Override
     public SurfaceData getReplacement() {
         return null;
