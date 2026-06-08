@@ -4,8 +4,19 @@
 <dict>
         <key>CFBundleDevelopmentRegion</key>
         <string>English</string>
-        <key>CFBundleExecutable</key>
-        <string>libjli.dylib</string>
+        <!--
+          CFBundleExecutable is intentionally omitted. Declaring libjli.dylib as the
+          bundle main executable makes codesign seal it (and Contents/MacOS/libjli.dylib)
+          as a bundle main-executable, embedding Info.plist (slot -1) and resource-directory
+          (slot -3) hashes that depend on Contents/_CodeSignature/CodeResources. When this
+          runtime is bundled into another app (e.g. an IntelliJ-based IDE) and that app is
+          re-signed/repacked, the runtime's _CodeSignature is dropped and those seals dangle
+          ("code has no resources but signature indicates they must be present"), breaking
+          notarization. Without CFBundleExecutable every Mach-O is signed flat (self-contained)
+          and survives re-bundling, while `codesign <bundle>` still produces a sealed,
+          stapleable bundle for standalone distribution. Discovery still works via the JavaVM
+          dict below. See IJI-3336 / JBR notarization-when-bundled investigation.
+        -->
         <key>CFBundleGetInfoString</key>
         <string>@@INFO@@</string>
         <key>CFBundleIdentifier</key>
