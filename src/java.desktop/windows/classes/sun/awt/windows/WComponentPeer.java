@@ -182,8 +182,12 @@ public abstract class WComponentPeer extends WObjectPeer
                 if (surfaceData instanceof Win32VKWindowSurfaceData vksd) {
                     // The Vulkan surface is persistent across resizes: revalidate
                     // it in place so the swapchain is recreated to the new size,
-                    // instead of building a brand-new surface.
+                    // instead of building a brand-new surface. The resized
+                    // swapchain has no content yet, so force a full repaint to
+                    // re-render and re-present it - otherwise apps that paint
+                    // only once would show nothing until the next frame.
                     vksd.revalidate();
+                    handlePaint(0, 0, width, height);
                 } else {
                     replaceSurfaceData();
                 }
@@ -222,9 +226,14 @@ public abstract class WComponentPeer extends WObjectPeer
                 if (surfaceData instanceof Win32VKWindowSurfaceData vksd) {
                     // The Vulkan surface is persistent: revalidate it in place
                     // on each dynamic layout request so the swapchain tracks the
-                    // window bounds during live resizing.
+                    // window bounds during live resizing. The resized swapchain
+                    // has no content yet, so force a full repaint to re-render
+                    // and re-present it - otherwise apps that paint only once
+                    // would show nothing until the next frame.
                     try {
                         vksd.revalidate();
+                        Rectangle b = getBounds();
+                        handlePaint(0, 0, b.width, b.height);
                     } catch (InvalidPipeException e) {
                         // REMIND: what do we do if revalidation fails?
                     }
