@@ -54,6 +54,16 @@ static void Win32VK_InitSurfaceData(VKWinSDOps* surface, void* data) {
         VK_IF_ERROR(vkCreateWin32SurfaceKHR(vk->instance, &surfaceCreateInfo, NULL, &surface->surface)) {
             VK_UNHANDLED_ERROR();
         }
+
+        // The Vulkan swapchain is a DXGI flip-model swapchain, which bypasses
+        // the GDI redirection bitmap. As a result, during a window resize DWM
+        // fills the area not yet covered by a presented swapchain image using
+        // the window class background brush rather than the WM_ERASEBKGND fill
+        // that GDI/D3D windows rely on. AWT registers its window class with a
+        // NULL brush, so that gap would flash black. Give the window the system
+        // window color brush so the resize gap matches the platform background
+        // (this is what GDI/D3D windows show via their redirection bitmap).
+        SetClassLongPtr(win32Window, GCLP_HBRBACKGROUND, (LONG_PTR)(COLOR_WINDOW + 1));
     }
 }
 
