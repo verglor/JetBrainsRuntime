@@ -45,7 +45,12 @@
 @property (readwrite, atomic) int nextDrawableCount;
 @property (readwrite, assign) int topInset;
 @property (readwrite, assign) int leftInset;
+
 @property (readwrite, atomic) int redrawCount;
+/* avoid reentrance in start/stop Redraw (main thread) (async) */
+@property (readwrite, atomic) BOOL willRedraw;
+/* redraw version acts like a transaction ID to ensure last version displayed */
+@property (readwrite, atomic) int redrawVersion;
 @property (readwrite, atomic) NSTimeInterval avgBlitFrameTime;
 
 #if TRACE_DISPLAY_ON

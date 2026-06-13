@@ -1145,6 +1145,7 @@ CVReturn mtlDisplayLinkCallback(CVDisplayLinkRef displayLink, const CVTimeStamp*
     dlState->redrawCount = KEEP_ALIVE_COUNT;
 
     layer.redrawCount = REDRAW_COUNT;
+    layer.redrawVersion++;
     [_layers addObject:layer];
 
     if (MTLLayer_isExtraRedrawEnabled()) {

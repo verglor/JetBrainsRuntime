@@ -162,6 +162,8 @@ BOOL MTLLayer_isExtraRedrawEnabled() {
         self.maximumDrawableCount = MAX_DRAWABLE;
     }
     self.presentsWithTransaction = NO;
+    self.willRedraw = NO;
+    self.redrawVersion = 0;
     self.avgBlitFrameTime = DF_BLIT_FRAME_TIME;
 #if TRACE_DISPLAY_ON
     self.avgNextDrawableTime = 0.0;
@@ -264,6 +266,8 @@ BOOL MTLLayer_isExtraRedrawEnabled() {
             // Keep Fence from now:
             releaseFence = NO;
 
+            const int blitVersion = self.redrawVersion; // last layer version
+
             id <MTLBlitCommandEncoder> blitEncoder = [commandBuf blitCommandEncoder];
 
             [blitEncoder
@@ -309,6 +313,12 @@ BOOL MTLLayer_isExtraRedrawEnabled() {
                                           CACurrentMediaTime(), [MTLLayer getDrawableId:drawable],
                                           1000.0 * presentedHandlerLatency
                             );
+                        }
+                        // redraw if last version:
+                        if (!self.willRedraw && (blitVersion == self.redrawVersion)) {
+                            NSLog(@"MTLLayer_blitTexture_PresentedHandler: drawable skipped-> DO startRedraw (v %d)",
+                                self.redrawVersion);
+                            [self startRedraw]; // ASYNC
                         }
                     }
                     [self release];
@@ -433,10 +443,17 @@ BOOL MTLLayer_isExtraRedrawEnabled() {
 - (void)startRedraw {
     if (isDisplaySyncEnabled()) {
         if (self.ctx != nil) {
-            [ThreadUtilities performOnMainThreadNowOrLater:NO // critical
-                                                     block:^(){
-                [self.ctx startRedraw:self];
-            }];
+            // coalesce pending redraws on main thread:
+            if (!self.willRedraw) {
+                // set flag willRedraw
+                self.willRedraw = YES;
+                [ThreadUtilities performOnMainThreadNowOrLater:NO // critical
+                                                         block:^(){
+                        // Reset flag willRedraw
+                        self.willRedraw = NO;
+                    [self.ctx startRedraw:self];
+                }];
+            }
         }
     } else {
             [ThreadUtilities performOnMainThreadNowOrLater:NO // critical
@@ -455,13 +472,19 @@ BOOL MTLLayer_isExtraRedrawEnabled() {
 - (void) stopRedraw:(MTLContext*)mtlc displayID:(jint)displayID force:(BOOL)force {
     if (isDisplaySyncEnabled()) {
         if (force) {
-            self.redrawCount = 0;
+            self.redrawCount = 0; // optimistic
         }
         if (mtlc != nil) {
-            [ThreadUtilities performOnMainThreadNowOrLater:NO // critical
-                                                     block:^(){
-                [mtlc stopRedraw:displayID layer:self];
-            }];
+            if (!self.willRedraw || force) {
+                [ThreadUtilities performOnMainThreadNowOrLater:NO // critical
+                                                         block:^(){
+                    if (force) {
+                        // double-check: ensure stopping redraw
+                        self.redrawCount = 0;
+                    }
+                    [mtlc stopRedraw:displayID layer:self];
+                }];
+            }
         }
     }
 }
