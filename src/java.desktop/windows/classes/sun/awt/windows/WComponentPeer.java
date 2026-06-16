@@ -179,13 +179,7 @@ public abstract class WComponentPeer extends WObjectPeer
             // Only recreate surfaceData if this setBounds is called
             // for a resize; a simple move should not trigger a recreation
             try {
-                if (surfaceData instanceof Win32VKWindowSurfaceData vksd) {
-                    // Revalidate & repaint; the swapchain etc. is managed in native code for Vulkan
-                    vksd.revalidate();
-                    handlePaint(0, 0, width, height);
-                } else {
-                    replaceSurfaceData();
-                }
+                replaceSurfaceData();
             } catch (InvalidPipeException e) {
                 // REMIND : what do we do if our surface creation failed?
             }
@@ -218,13 +212,8 @@ public abstract class WComponentPeer extends WObjectPeer
                 cont.invalidate();
                 cont.validate();
 
-                if (surfaceData instanceof Win32VKWindowSurfaceData vksd) {
-                    // Revalidate & repaint; the swapchain etc. is managed in native code for Vulkan
-                    vksd.revalidate();
-                    Rectangle b = getBounds();
-                    handlePaint(0, 0, b.width, b.height);
-                } else if (surfaceData instanceof D3DSurfaceData.D3DWindowSurfaceData ||
-                    surfaceData instanceof OGLSurfaceData)
+                if (surfaceData instanceof D3DSurfaceData.D3DWindowSurfaceData ||
+                        surfaceData instanceof OGLSurfaceData || surfaceData instanceof Win32VKWindowSurfaceData)
                 {
                     // When OGL or D3D is enabled, it is necessary to
                     // replace the SurfaceData for each dynamic layout
@@ -490,13 +479,20 @@ public abstract class WComponentPeer extends WObjectPeer
                 if (pData == 0) {
                     return;
                 }
-                numBackBuffers = newNumBackBuffers;
-                ScreenUpdateManager mgr = ScreenUpdateManager.getInstance();
-                oldData = surfaceData;
-                mgr.dropScreenSurface(oldData);
-                createScreenSurface(true);
-                if (oldData != null) {
-                    oldData.invalidate();
+                if (surfaceData instanceof Win32VKWindowSurfaceData vksd) {
+                    vksd.revalidate();
+                    Rectangle bounds = getBounds();
+                    handlePaint(0, 0, bounds.width, bounds.height);
+                    numBackBuffers = 0;
+                } else {
+                    numBackBuffers = newNumBackBuffers;
+                    ScreenUpdateManager mgr = ScreenUpdateManager.getInstance();
+                    oldData = surfaceData;
+                    mgr.dropScreenSurface(oldData);
+                    createScreenSurface(true);
+                    if (oldData != null) {
+                        oldData.invalidate();
+                    }
                 }
 
                 oldBB = backBuffer;
