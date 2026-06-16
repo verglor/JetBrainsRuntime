@@ -31,6 +31,7 @@ import sun.util.logging.PlatformLogger;
 import java.awt.Toolkit;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public final class VKEnv {
@@ -70,12 +71,12 @@ public final class VKEnv {
     public static native long initPlatformX11(long nativePtr);
     private static native VKGPU[] initNative(long platformData);
 
-    public static synchronized void init(long platformData) {
+    public static synchronized void init(Supplier<Long> getPlatformData) {
         if (state > INITIALIZING) return;
         int newState = DISABLED;
         if (Options.vulkan) {
             try {
-                devices = initNative(platformData);
+                devices = initNative(getPlatformData.get());
                 if (devices != null) {
                     newState = ENABLED;
                     if (Options.accelsd) newState |= ACCELSD_BIT;
@@ -140,7 +141,7 @@ public final class VKEnv {
                 Toolkit.getDefaultToolkit();
             }
             // Still not initialized? Init without platform data.
-            if (state == INITIALIZING) init(0);
+            if (state == INITIALIZING) init(() -> 0L);
         }
     }
 

@@ -507,7 +507,7 @@ public final class XToolkit extends UNIXToolkit implements Runnable {
             device = (X11GraphicsDevice) localEnv.getDefaultScreenDevice();
             display = device.getDisplay();
             setupModifierMap();
-            VKEnv.init(VKEnv.initPlatformX11(display));
+            VKEnv.init(() -> VKEnv.initPlatformX11(display));
             initIDs();
             setBackingStoreType();
         }
