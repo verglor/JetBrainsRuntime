@@ -376,8 +376,7 @@ VkBool32 VKSD_AcquireNextWindowImage(VKWinSDOps* vkwinsdo, VkSemaphore acquireSe
                 .pImageIndices = &imageIndex,
             };
 
-            acquireNextImageResult = device->vkReleaseSwapchainImagesEXT(device->handle, &releaseInfo);
-            if (acquireNextImageResult != VK_SUCCESS) {
+            VK_IF_ERROR(device->vkReleaseSwapchainImagesEXT(device->handle, &releaseInfo)) {
                 return VK_FALSE;
             }
 
