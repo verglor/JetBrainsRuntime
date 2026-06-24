@@ -133,7 +133,30 @@ void VKDevice_CheckAndAdd(VKEnv* vk, VkPhysicalDevice physicalDevice) {
     // Check extensions.
     VKNamedEntry* extensions = NULL;
     DEF_NAMED_ENTRY(extensions, VK_KHR_SWAPCHAIN_EXTENSION);
+    DEF_NAMED_ENTRY(extensions, VK_EXT_SWAPCHAIN_MAINTENANCE_1_EXTENSION);
     VKNamedEntry_Match(extensions, allExtensions[0].extensionName, extensionCount, sizeof(VkExtensionProperties));
+
+    bool hasSwapchainMaintenance1 = false;
+
+    if (vk->presentationSupported && vk->surfaceMaintenance1Supported &&
+            VK_EXT_SWAPCHAIN_MAINTENANCE_1_EXTENSION.found != NULL) {
+        VkPhysicalDeviceSwapchainMaintenance1FeaturesEXT swapchainMaintenance1Features = {
+                .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SWAPCHAIN_MAINTENANCE_1_FEATURES_EXT,
+                .pNext = NULL,
+        };
+        VkPhysicalDeviceFeatures2 deviceFeatures2 = {
+                .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
+                .pNext = &swapchainMaintenance1Features,
+        };
+        vk->vkGetPhysicalDeviceFeatures2(physicalDevice, &deviceFeatures2);
+        if (swapchainMaintenance1Features.swapchainMaintenance1) {
+            hasSwapchainMaintenance1 = true;
+        }
+    }
+
+    if (!hasSwapchainMaintenance1) {
+        VK_EXT_SWAPCHAIN_MAINTENANCE_1_EXTENSION.found = NULL;
+    }
 
     // Query queue family properties.
     uint32_t queueFamilyCount = 0;
@@ -272,7 +295,8 @@ void VKDevice_CheckAndAdd(VKEnv* vk, VkPhysicalDevice physicalDevice) {
         .enabledExtensions = VKNamedEntry_CollectNames(extensions),
         .sampledSrcTypes = sampledSrcTypes,
         .supportedFormats = { .as_untyped = supportedFormats.as_untyped },
-        .caps = caps
+        .caps = caps,
+        .swapchainMaintenance1Supported = hasSwapchainMaintenance1,
     };
 }
 
@@ -334,6 +358,18 @@ Java_sun_java2d_vulkan_VKGPU_init(JNIEnv *env, jclass jClass, jlong jDevice) {
     };
     void *pNext = &features12;
 
+    VkPhysicalDeviceSwapchainMaintenance1FeaturesEXT featuresSwapchainMaintenance1 = {
+            .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SWAPCHAIN_MAINTENANCE_1_FEATURES_EXT,
+    };
+
+    VKEnv* vk = VKEnv_GetInstance();
+
+    if (vk->presentationSupported && device->swapchainMaintenance1Supported) {
+        featuresSwapchainMaintenance1.swapchainMaintenance1 = VK_TRUE;
+        featuresSwapchainMaintenance1.pNext = pNext;
+        pNext = &featuresSwapchainMaintenance1;
+    }
+
     VkDeviceCreateInfo createInfo = {
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
         .pNext = pNext,
@@ -347,7 +383,6 @@ Java_sun_java2d_vulkan_VKGPU_init(JNIEnv *env, jclass jClass, jlong jDevice) {
         .pEnabledFeatures = &features10
     };
 
-    VKEnv* vk = VKEnv_GetInstance();
     VK_IF_ERROR(vk->vkCreateDevice(device->physicalDevice, &createInfo, NULL, &device->handle)) {
         JNU_ThrowByName(env, "java/lang/RuntimeException", "Cannot create device");
         return;
@@ -359,6 +394,9 @@ Java_sun_java2d_vulkan_VKGPU_init(JNIEnv *env, jclass jClass, jlong jDevice) {
     DEVICE_FUNCTION_TABLE(CHECK_PROC_ADDR, missingAPI, vk->vkGetDeviceProcAddr, device->handle, device->)
     if (device->caps & CAP_PRESENTABLE_BIT) {
         SWAPCHAIN_DEVICE_FUNCTION_TABLE(CHECK_PROC_ADDR, missingAPI, vk->vkGetDeviceProcAddr, device->handle, device->)
+        if (device->swapchainMaintenance1Supported) {
+            SWAPCHAIN_MAINTENANCE_1_DEVICE_FUNCTION_TABLE(CHECK_PROC_ADDR, missingAPI, vk->vkGetDeviceProcAddr, device->handle, device->)
+        }
     }
     if (missingAPI) {
         VKDevice_Reset(device);
