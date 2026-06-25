@@ -148,7 +148,13 @@ function zip_native_debug_symbols_win() {
 
 function do_exit() {
   exit_code=$1
-  [ $do_reset_changes -eq 1 ] && git checkout HEAD jb/project/tools/common/modules.list src/java.desktop/share/classes/module-info.java
+  # Reset the files touched by add_jcef_module.patch, but only when they are
+  # version-controlled. OpenJDK reference builds run this tooling against vanilla
+  # openjdk/jdk with jb/project/tools overlaid (untracked), so there is nothing to
+  # reset; a real checkout failure on a JBR source build still aborts the build.
+  if [ $do_reset_changes -eq 1 ] && git ls-files --error-unmatch jb/project/tools/common/modules.list >/dev/null 2>&1; then
+    git checkout HEAD jb/project/tools/common/modules.list src/java.desktop/share/classes/module-info.java
+  fi
   if [ $do_reset_dcevm -eq 1 ]; then
     [ ! -z $HEAD_REVISION ] && git reset --hard $HEAD_REVISION
   fi
