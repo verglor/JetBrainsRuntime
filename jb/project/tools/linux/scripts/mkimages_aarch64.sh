@@ -25,14 +25,6 @@ source jb/project/tools/common/scripts/common.sh
 JCEF_PATH=${JCEF_PATH:=./jcef_linux_aarch64}
 
 function do_configure {
-
-  WAYLAND_PROTOCOLS_PATH=/opt/wayland-protocols
-  WITH_WAYLAND_PROTOCOLS=
-
-  if [ -e "$WAYLAND_PROTOCOLS_PATH" ]; then
-    WITH_WAYLAND_PROTOCOLS="--with-wayland-protocols=$WAYLAND_PROTOCOLS_PATH"
-  fi
-
   sh configure \
     $WITH_DEBUG_LEVEL \
     --with-vendor-name="$VENDOR_NAME" \
@@ -43,13 +35,11 @@ function do_configure {
     --with-version-opt=b"$build_number" \
     --with-boot-jdk="$BOOT_JDK" \
     --enable-cds=yes \
-    --with-vulkan \
     $DISABLE_WARNINGS_AS_ERRORS \
     $STATIC_CONF_ARGS \
     $REPRODUCIBLE_BUILD_OPTS \
     $WITH_ZIPPED_NATIVE_DEBUG_SYMBOLS \
     $WITH_BUNDLED_FREETYPE \
-    $WITH_WAYLAND_PROTOCOLS \
     || do_exit $?
 }
 

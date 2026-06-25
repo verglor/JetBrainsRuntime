@@ -33,19 +33,6 @@ function do_configure {
       --openjdk-target=x86_64-unknown-linux-gnu"
   fi
 
-  WAYLAND_PROTOCOLS_PATH=/opt/wayland-protocols
-  WITH_WAYLAND_PROTOCOLS=
-
-  if [ -e "$WAYLAND_PROTOCOLS_PATH" ]; then
-    WITH_WAYLAND_PROTOCOLS="--with-wayland-protocols=$WAYLAND_PROTOCOLS_PATH"
-  fi
-
-  if [ -n "${JCEF_BUILD_LEGACY:-}" ]; then
-    WITH_VULKAN=""
-  else
-    WITH_VULKAN="--with-vulkan"
-  fi
-
   sh configure \
     $WITH_DEBUG_LEVEL \
     --with-vendor-name="$VENDOR_NAME" \
@@ -56,14 +43,12 @@ function do_configure {
     --with-version-opt=b"$build_number" \
     --with-boot-jdk="$BOOT_JDK" \
     --enable-cds=yes \
-    $WITH_VULKAN \
     $LINUX_TARGET \
     $DISABLE_WARNINGS_AS_ERRORS \
     $STATIC_CONF_ARGS \
     $REPRODUCIBLE_BUILD_OPTS \
     $WITH_ZIPPED_NATIVE_DEBUG_SYMBOLS \
     $WITH_BUNDLED_FREETYPE \
-    $WITH_WAYLAND_PROTOCOLS \
     || do_exit $?
 }
 
