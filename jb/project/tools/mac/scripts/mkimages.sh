@@ -113,7 +113,7 @@ function create_image_bundle {
   cp -R "$JSDK"/../MacOS "$JRE_CONTENTS"
   cp "$JSDK"/../Info.plist "$JRE_CONTENTS"
 
-  [ -n "$bundle_type" ] && (cp -a $JCEF_PATH/Frameworks "$JRE_CONTENTS" || do_exit $?)
+  [ -n "$bundle_type" ] && [ -d "$JCEF_PATH/Frameworks" ] && (cp -a $JCEF_PATH/Frameworks "$JRE_CONTENTS" || do_exit $?)
 
   echo Creating "$JBR".tar.gz ...
   # Normalize timestamp
