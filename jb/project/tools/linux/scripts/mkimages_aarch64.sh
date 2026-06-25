@@ -25,6 +25,14 @@ source jb/project/tools/common/scripts/common.sh
 JCEF_PATH=${JCEF_PATH:=./jcef_linux_aarch64}
 
 function do_configure {
+
+  WAYLAND_PROTOCOLS_PATH=/opt/wayland-protocols
+  WITH_WAYLAND_PROTOCOLS=
+
+  if [ -e "$WAYLAND_PROTOCOLS_PATH" ]; then
+    WITH_WAYLAND_PROTOCOLS="--with-wayland-protocols=$WAYLAND_PROTOCOLS_PATH"
+  fi
+
   sh configure \
     $WITH_DEBUG_LEVEL \
     --with-vendor-name="$VENDOR_NAME" \
@@ -35,11 +43,13 @@ function do_configure {
     --with-version-opt=b"$build_number" \
     --with-boot-jdk="$BOOT_JDK" \
     --enable-cds=yes \
+    --with-vulkan \
     $DISABLE_WARNINGS_AS_ERRORS \
     $STATIC_CONF_ARGS \
     $REPRODUCIBLE_BUILD_OPTS \
     $WITH_ZIPPED_NATIVE_DEBUG_SYMBOLS \
     $WITH_BUNDLED_FREETYPE \
+    $WITH_WAYLAND_PROTOCOLS \
     || do_exit $?
 }
 
@@ -60,8 +70,10 @@ function create_image_bundle {
 
   libc_type_suffix=''
   fastdebug_infix=''
+  __cds_opt=''
 
   if is_musl; then libc_type_suffix='musl-' ; fi
+  __cds_opt="--generate-cds-archive"
 
   [ "$bundle_type" == "fd" ] && [ "$__arch_name" == "$JBRSDK_BUNDLE" ] && __bundle_name=$__arch_name && fastdebug_infix="fastdebug-"
   JBR=${__bundle_name}-${JBSDK_VERSION}-linux-${libc_type_suffix}aarch64-${fastdebug_infix}b${build_number}
@@ -71,7 +83,7 @@ function create_image_bundle {
   [ -d "$IMAGES_DIR"/"$__root_dir" ] && rm -rf "${IMAGES_DIR:?}"/"$__root_dir"
   $JSDK/bin/jlink \
     --module-path "$__modules_path" --no-man-pages --compress=2 \
-    --add-modules "$__modules" --output "$IMAGES_DIR"/"$__root_dir"
+    $__cds_opt --add-modules "$__modules" --output "$IMAGES_DIR"/"$__root_dir"
 
   grep -v "^JAVA_VERSION" "$JSDK"/release | grep -v "^MODULES" >> "$IMAGES_DIR"/"$__root_dir"/release
   if [ "$__arch_name" == "$JBRSDK_BUNDLE" ]; then
@@ -84,6 +96,7 @@ function create_image_bundle {
 
   # jmod does not preserve file permissions (JDK-8173610)
   [ -f "$IMAGES_DIR"/"$__root_dir"/lib/jcef_helper ] && chmod a+x "$IMAGES_DIR"/"$__root_dir"/lib/jcef_helper
+  [ -f "$IMAGES_DIR"/"$__root_dir"/lib/cef_server ] && chmod a+x "$IMAGES_DIR"/"$__root_dir"/lib/cef_server
 
   echo Creating "$JBR".tar.gz ...
 
@@ -105,6 +118,7 @@ jbr_name_postfix=""
 
 case "$bundle_type" in
   "jcef")
+    do_reset_changes=1
     jbr_name_postfix="_${bundle_type}"
     do_maketest=1
     ;;
@@ -115,6 +129,7 @@ case "$bundle_type" in
     jbr_name_postfix="_ft"
     ;;
   "fd")
+    do_reset_changes=1
     jbr_name_postfix="_${bundle_type}"
     WITH_DEBUG_LEVEL="--with-debug-level=fastdebug"
     RELEASE_NAME=linux-aarch64-server-fastdebug
@@ -157,7 +172,7 @@ if [ $do_maketest -eq 1 ]; then
     JBRSDK_TEST=${JBRSDK_BUNDLE}-${JBSDK_VERSION}-linux-${libc_type_suffix}test-aarch64-b${build_number}
     echo Creating "$JBRSDK_TEST" ...
     [ $do_reset_changes -eq 1 ] && git checkout HEAD jb/project/tools/common/modules.list src/java.desktop/share/classes/module-info.java
-    make test-image CONF=$RELEASE_NAME || do_exit $?
+    make test-image CONF=$RELEASE_NAME JBR_API_JBR_VERSION=TEST || do_exit $?
     tar -pcf "$JBRSDK_TEST".tar -C $IMAGES_DIR --exclude='test/jdk/demos' test || do_exit $?
     [ -f "$JBRSDK_TEST.tar.gz" ] && rm "$JBRSDK_TEST.tar.gz"
     gzip "$JBRSDK_TEST".tar || do_exit $?

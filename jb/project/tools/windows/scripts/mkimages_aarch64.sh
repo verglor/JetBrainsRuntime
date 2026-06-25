@@ -78,6 +78,7 @@ function create_image_bundle {
       rsync -amv --include="*/" --include="*.pdb" --exclude="*" $dir $__root_dir
     done
     copy_jmods "$__modules" "$__modules_path" "$__root_dir"/jmods
+    zip_native_debug_symbols_win $IMAGES_DIR/symbols "${__root_dir}_pdb"
   fi
 }
 
@@ -103,14 +104,14 @@ if [ -z "${INC_BUILD:-}" ]; then
   do_configure || do_exit $?
   if [ $do_maketest -eq 1 ]; then
     make LOG=info CONF=$RELEASE_NAME clean || do_exit $?
-    make LOG=info CONF=$RELEASE_NAME images test-image || do_exit $?
+    make LOG=info CONF=$RELEASE_NAME images test-image JBR_API_JBR_VERSION=TEST || do_exit $?
   else
     make LOG=info CONF=$RELEASE_NAME clean || do_exit $?
     make LOG=info CONF=$RELEASE_NAME images || do_exit $?
   fi
 else
   if [ $do_maketest -eq 1 ]; then
-    make LOG=info CONF=$RELEASE_NAME images test-image || do_exit $?
+    make LOG=info CONF=$RELEASE_NAME images test-image JBR_API_JBR_VERSION=TEST || do_exit $?
   else
     make LOG=info CONF=$RELEASE_NAME images || do_exit $?
   fi

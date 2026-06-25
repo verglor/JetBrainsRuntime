@@ -44,12 +44,13 @@ else
   fi
 fi
 
+if [ -n "${SYSROOT:-}" ]; then
+  WITH_SYSROOT="--with-sysroot=$SYSROOT"
+else
+  WITH_SYSROOT=""
+fi
+
 function do_configure {
-  if [[ "${architecture}" == *aarch64* ]]; then
-    ENABLE_CDS="--enable-cds=no"
-  else
-    ENABLE_CDS="--enable-cds=yes"
-  fi
   sh configure \
     $WITH_DEBUG_LEVEL \
     --with-vendor-name="$VENDOR_NAME" \
@@ -67,6 +68,7 @@ function do_configure {
     $REPRODUCIBLE_BUILD_OPTS \
     $WITH_ZIPPED_NATIVE_DEBUG_SYMBOLS \
     $WITH_XCODE_PATH \
+    $WITH_SYSROOT \
     || do_exit $?
 }
 
@@ -77,6 +79,8 @@ function create_image_bundle {
   __modules=$4
 
   fastdebug_infix=''
+  __cds_opt=''
+  __cds_opt="--generate-cds-archive"
 
   tmp=.bundle.$$.tmp
   mkdir "$tmp" || do_exit $?
@@ -91,7 +95,7 @@ function create_image_bundle {
   echo Running jlink...
   "$JSDK"/bin/jlink \
     --module-path "$__modules_path" --no-man-pages --compress=2 \
-    --add-modules "$__modules" --output "$JRE_CONTENTS/Home" || do_exit $?
+    $__cds_opt --add-modules "$__modules" --output "$JRE_CONTENTS/Home" || do_exit $?
 
   grep -v "^JAVA_VERSION" "$JSDK"/release | grep -v "^MODULES" >> "$JRE_CONTENTS/Home/release"
   if [ "$__arch_name" == "$JBRSDK_BUNDLE" ]; then
@@ -132,12 +136,14 @@ RELEASE_NAME=macosx-${CONF_ARCHITECTURE}-server-release
 
 case "$bundle_type" in
   "jcef")
+    do_reset_changes=1
     do_maketest=1
     ;;
   "nomod" | "")
     bundle_type=""
     ;;
   "fd")
+    do_reset_changes=1
     WITH_DEBUG_LEVEL="--with-debug-level=fastdebug"
     RELEASE_NAME=macosx-${CONF_ARCHITECTURE}-server-fastdebug
     JBSDK=macosx-${architecture}-server-release
@@ -155,6 +161,8 @@ IMAGES_DIR=build/$RELEASE_NAME/images
 JSDK=$IMAGES_DIR/jdk-bundle/jdk-$JBSDK_VERSION.jdk/Contents/Home
 JSDK_MODS_DIR=$IMAGES_DIR/jmods
 JBRSDK_BUNDLE=jbrsdk
+
+# test/jdk/jb/java/awt/Focus/FullScreenFocusStealing.java test/jdk/java/awt/color/ICC_ColorSpace/MTTransformReplacedProfile.java test/jdk/java/awt/datatransfer/DataFlavor/DataFlavorRemoteTest.java test/jdk/java/awt/Robot/NonEmptyErrorStream.java
 
 if [ "$bundle_type" == "jcef" ] || [ "$bundle_type" == "fd" ]; then
   if [ "$bundle_type" == "jcef" ]; then
@@ -183,7 +191,7 @@ if [ $do_maketest -eq 1 ]; then
     JBRSDK_TEST=${JBRSDK_BUNDLE}-${JBSDK_VERSION}-osx-test-${architecture}-b${build_number}
     echo Creating "$JBRSDK_TEST" ...
     [ $do_reset_changes -eq 1 ] && git checkout HEAD jb/project/tools/common/modules.list src/java.desktop/share/classes/module-info.java
-    make test-image CONF=$RELEASE_NAME || do_exit $?
+    make test-image CONF=$RELEASE_NAME JBR_API_JBR_VERSION=TEST || do_exit $?
     [ -f "$JBRSDK_TEST.tar.gz" ] && rm "$JBRSDK_TEST.tar.gz"
     COPYFILE_DISABLE=1 tar -pczf "$JBRSDK_TEST".tar.gz -C $IMAGES_DIR --exclude='test/jdk/demos' test || do_exit $?
 fi
