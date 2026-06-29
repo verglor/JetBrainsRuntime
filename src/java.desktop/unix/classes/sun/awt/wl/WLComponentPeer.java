@@ -91,6 +91,7 @@ import java.util.function.Supplier;
 
 public class WLComponentPeer implements ComponentPeer, WLSurfaceSizeListener {
     protected static final PlatformLogger log = PlatformLogger.getLogger("sun.awt.wl.WLComponentPeer");
+    protected static final PlatformLogger outputLog = PlatformLogger.getLogger("sun.awt.wl.output.WLComponentPeer");
     private static final PlatformLogger focusLog = PlatformLogger.getLogger("sun.awt.wl.focus.WLComponentPeer");
     private static final PlatformLogger popupLog = PlatformLogger.getLogger("sun.awt.wl.popup.WLComponentPeer");
 
@@ -1831,12 +1832,31 @@ public class WLComponentPeer implements ComponentPeer, WLSurfaceSizeListener {
             log.fine(this + " is on (possibly) new device " + device);
         }
 
+        if (outputLog.isLoggable(Level.FINE)) {
+            outputLog.fine("Target: " + target.getName() + (targetIsWlPopup()?" (WLPopup) (":" (") +
+                    target.getX() + ", " + target.getY() + ")");
+        }
         switch (change) {
             case CHANGED:
+                if (outputLog.isLoggable(Level.FINE)) {
+                    var bnd = device.getBounds();
+                    outputLog.fine("Changed device: " + device.getIDstring());
+                    outputLog.fine(String.format("  id=%4d (%6s) %dx%d; %10s",
+                            device.getID(), String.format("%s,%s",bnd.x, bnd.y),
+                            bnd.width, bnd.height, device.getIDstring()));
+                }
                 if ((mask & WLGraphicsDevice.WL_OUTPUT_CHANGED_ORIGIN) > 0) {
+                    if (outputLog.isLoggable(Level.FINE)) {
+                        outputLog.fine("  origin dx=" + dx + ", dy=" + dy);
+                    }
+
                     if (targetIsWlPopup()) {
                         Point loc = target.getLocation();
                         loc.translate(dx, dy);
+                        if (outputLog.isLoggable(Level.FINE)) {
+                            outputLog.fine("Move target location: (" + target.getX() + ", " + target.getY() +
+                                    ")->(" + loc.x + ", " + loc.y + ")");
+                        }
                         resetTargetLocationTo(loc.x, loc.y);
                     }
                 }
@@ -1844,21 +1864,53 @@ public class WLComponentPeer implements ComponentPeer, WLSurfaceSizeListener {
 
             case ENTERED:
                 var oldDevice = (WLGraphicsDevice) target.getGraphicsConfiguration().getDevice();
-
+                if (outputLog.isLoggable(Level.FINE)) {
+                    var bnd = device.getBounds();
+                    outputLog.fine("Entered device: " + device.getIDstring());
+                    outputLog.fine(String.format("                id=%4d (%6s) %dx%d",
+                            device.getID(), String.format("%s,%s",bnd.x, bnd.y),
+                            bnd.width, bnd.height));
+                }
                 if (oldDevice != device) {
+                    if (outputLog.isLoggable(Level.FINE)) {
+                        var oldBnd = oldDevice.getBounds();
+                        outputLog.fine("          from: " + oldDevice.getIDstring());
+                        outputLog.fine(String.format("                id=%4d (%6s) %dx%d",
+                                oldDevice.getID(), String.format("%s,%s",oldBnd.x, oldBnd.y),
+                                oldBnd.width, oldBnd.height));
+                    }
                     oldDevice.removeWindow(this);
                     device.addWindow(this);
                 }
                 break;
 
             case LEFT:
+                if (outputLog.isLoggable(Level.FINE)) {
+                    var bnd = device.getBounds();
+                    outputLog.fine("Left device: " + device.getIDstring());
+                    outputLog.fine(String.format("             id=%4d (%6s) %dx%d",
+                            device.getID(), String.format("%s,%s",bnd.x, bnd.y),
+                            bnd.width, bnd.height));
+                    outputLog.fine("\n");
+                }
+
                 device.removeWindow(this);
                 return;
         }
 
         if (!targetIsWlPopup()) {
             // Toplevels are assumed to be always located at (0, 0) of their respective monitors.
+            if (outputLog.isLoggable(Level.FINE)) {
+                var loc = gc.getBounds().getLocation();
+                outputLog.fine("Set target location to: (" + loc.x + ", " + loc.y + ")");
+                outputLog.fine("");
+            }
+
             resetTargetLocationTo(gc);
+        } else {
+            if (outputLog.isLoggable(Level.FINE)) {
+                outputLog.fine("");
+            }
         }
 
         performUnlocked(() -> {
