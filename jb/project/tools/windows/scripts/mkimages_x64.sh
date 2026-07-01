@@ -25,6 +25,7 @@ source jb/project/tools/common/scripts/common.sh
 WORK_DIR=$(pwd)
 JCEF_PATH=${JCEF_PATH:=$WORK_DIR/jcef_win_x64}
 NVDA_PATH=${NVDA_PATH:=$WORK_DIR/nvda_controllerClient}
+VULKAN_SDK_INCLUDE=${BOOT_JDK}/include
 
 function do_configure {
   sh ./configure \
@@ -40,6 +41,7 @@ function do_configure {
     --with-nvdacontrollerclient=$NVDA_PATH \
 	--disable-ccache \
     --with-vulkan \
+    --with-vulkan-include=$VULKAN_SDK_INCLUDE \
     $DISABLE_WARNINGS_AS_ERRORS \
     $STATIC_CONF_ARGS \
     $REPRODUCIBLE_BUILD_OPTS \
