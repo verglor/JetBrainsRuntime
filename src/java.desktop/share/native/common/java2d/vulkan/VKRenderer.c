@@ -1045,6 +1045,51 @@ void VKRenderer_FlushSurface(VKSDOps* surface) {
     }
 }
 
+void VKRenderer_BlitBackingImageContentOnto(VKSDOps *surface, VKImage *targetImage) {
+    assert(surface != NULL && targetImage != NULL);
+    if (surface->image == NULL) {
+        return;
+    }
+
+    static const VkImageSubresourceLayers COLOR_SUBRESOURCE = {
+            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .mipLevel = 0, .baseArrayLayer = 0, .layerCount = 1};
+    static const VkOffset3D INTERSECTION_TOP_LEFT = {0, 0, 0};
+    uint32_t intersectionW = surface->image->extent.width < targetImage->extent.width ? surface->image->extent.width : targetImage->extent.width;
+    uint32_t intersectionH = surface->image->extent.height < targetImage->extent.height ? surface->image->extent.height : targetImage->extent.height;
+    VkOffset3D intersectionBottomRight = {(int32_t)intersectionW, (int32_t)intersectionH, 1};
+
+    VKDevice* device = surface->device;
+    VKRenderer* renderer = device->renderer;
+    VkCommandBuffer cb = VKRenderer_Record(renderer);
+
+    // Prepare image layouts for the blit
+    VkImageMemoryBarrier barriers[2];
+    VKBarrierBatch barrierBatch = {0};
+    VKImage_AddBarrier(barriers, &barrierBatch,
+                       surface->image, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_READ_BIT, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+    VKImage_AddBarrier(barriers, &barrierBatch,
+                       targetImage, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    VKRenderer_RecordBarriers(renderer, NULL, NULL, barriers, &barrierBatch);
+
+    // Blit the common area (anchoring to top-left)
+    VkImageBlit blit = {
+            .srcSubresource = COLOR_SUBRESOURCE,
+            .srcOffsets = {INTERSECTION_TOP_LEFT, intersectionBottomRight},
+            .dstSubresource = COLOR_SUBRESOURCE,
+            .dstOffsets = {INTERSECTION_TOP_LEFT, intersectionBottomRight}
+    };
+    device->vkCmdBlitImage(cb,
+                           surface->image->handle, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                           targetImage->handle, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                           1, &blit, VK_FILTER_NEAREST);
+
+
+    // Don't discard this surface until the transfer is done
+    surface->lastTimestamp = renderer->writeTimestamp;
+
+    J2dRlsTraceLn(J2D_TRACE_VERBOSE, "VKRenderer_BlitBackingImageContentOnto(%p): queued for presentation", surface);
+}
+
 void VKRenderer_ConfigureSurface(VKSDOps* surface, VkExtent2D extent, VKDevice* device) {
     assert(surface != NULL);
     surface->requestedExtent = extent;
