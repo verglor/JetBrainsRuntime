@@ -38,8 +38,6 @@ function do_configure {
     --with-toolchain-version=$TOOLCHAIN_VERSION \
     --with-boot-jdk=$BOOT_JDK \
     --with-nvdacontrollerclient=$NVDA_PATH \
-    --disable-ccache \
-    --enable-cds=yes \
     --with-vulkan \
     $DISABLE_WARNINGS_AS_ERRORS \
     $STATIC_CONF_ARGS \
