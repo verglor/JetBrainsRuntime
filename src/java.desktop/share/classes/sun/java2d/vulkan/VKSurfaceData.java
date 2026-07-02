@@ -91,6 +91,8 @@ public abstract class VKSurfaceData extends SurfaceData
     protected int height;
     private int type;
 
+    private native void updateExtentAndDeviceUnlocked(long pData, long device, int extentWidth, int extentHeight);
+
     protected VKSurfaceData(VKFormat format, int transparency, int type) {
         super(format.getSurfaceType(transparency), format.getFormatModel(transparency).getColorModel());
         this.format = format;
@@ -343,12 +345,15 @@ public abstract class VKSurfaceData extends SurfaceData
     protected void configure() {
         VKRenderQueue rq = VKRenderQueue.getInstance();
         rq.lock();
+        long pData = getNativeOps();
+        long device = gc.getGPU().getNativeHandle();
+        updateExtentAndDeviceUnlocked(pData, device, width, height);
         try {
             RenderBuffer buf = rq.getBuffer();
             rq.ensureCapacityAndAlignment(24, 4);
             buf.putInt(CONFIGURE_SURFACE);
-            buf.putLong(getNativeOps());
-            buf.putLong(gc.getGPU().getNativeHandle());
+            buf.putLong(pData);
+            buf.putLong(device);
             buf.putInt(width);
             buf.putInt(height);
 
